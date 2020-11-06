@@ -43,7 +43,8 @@ LoadOpenCore (
   EFI_STATUS                 Status;
   VOID                       *Buffer;
   UINTN                      LoaderPathSize;
-  UINTN                      RootPathSize;
+  UINTN                      PrefixPathSize;
+  UINTN                      RootPathLength;
   CHAR16                     *LoaderPath;
   UINT32                     BufferSize;
 
@@ -63,12 +64,14 @@ LoadOpenCore (
   if (LoaderPath != NULL) {
     if (UnicodeGetParentDirectory (LoaderPath)
       && UnicodeGetParentDirectory (LoaderPath)) {
-      RootPathSize = LoaderPathSize - StrSize (LoaderPath);
-
-      if (RootPathSize >= L_STR_SIZE (OPEN_CORE_DRIVER_PATH)) {
-        LoaderPath[RootPathSize] = '\\';
-        CopyMem (&LoaderPath[RootPathSize + 1], OPEN_CORE_DRIVER_PATH, L_STR_SIZE (OPEN_CORE_DRIVER_PATH));
+      DEBUG ((DEBUG_INFO, "BS: Relative path - %s\n", LoaderPath));
+      PrefixPathSize = StrSize (LoaderPath);
+      if (LoaderPathSize - PrefixPathSize >= L_STR_SIZE (OPEN_CORE_DRIVER_PATH)) {
+        RootPathLength = PrefixPathSize / sizeof (CHAR16) - 1;
+        LoaderPath[RootPathLength] = '\\';
+        CopyMem (&LoaderPath[RootPathLength + 1], OPEN_CORE_DRIVER_PATH, L_STR_SIZE (OPEN_CORE_DRIVER_PATH));
         Buffer = ReadFile (FileSystem, LoaderPath, &BufferSize, BASE_16MB);
+        DEBUG ((DEBUG_INFO, "BS: Startup path - %s (%p)\n", LoaderPath, Buffer));
       }
     }
 
